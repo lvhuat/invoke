@@ -35,7 +35,6 @@ type client struct {
 	routes  map[string]string
 	payload func() ([]byte, error)
 
-	logFields  map[string]interface{}
 	ctx        context.Context
 	useTracing bool
 	useCircuit bool
@@ -67,7 +66,6 @@ func (client *client) clear() {
 	client.host = ""
 	client.scheme = "http"
 	client.payload = nil
-	client.logFields = make(map[string]interface{}, 10)
 	client.ctx = nil
 }
 
@@ -358,23 +356,16 @@ func (client *client) build() (*http.Request, error) {
 
 	path, err := parsePath(client.path, client.routes)
 	if err != nil {
-		client.logFields["error"] = "routes parameter invalid"
-		client.logFields["routes"] = client.routes
 		return nil, err
 	}
 
 	if client.host == "" {
-		client.logFields["error"] = "no avaliable remote"
 		return nil, fmt.Errorf("remote is emtpy")
 	}
 
 	url, err := makeUrl(client.scheme, client.host, path, client.queries)
 
 	if err != nil {
-		client.logFields["scheme"] = client.scheme
-		client.logFields["remote"] = client.host
-		client.logFields["path"] = url
-		client.logFields["queries"] = client.queries
 		return nil, err
 	}
 
@@ -384,13 +375,11 @@ func (client *client) build() (*http.Request, error) {
 		if err != nil {
 			return nil, err
 		}
-		client.logFields["payload"] = string(b)
 		reader = bytes.NewReader(b)
 	}
 
 	request, err := http.NewRequest(client.method, url, reader)
 	if err != nil {
-		client.logFields["error"] = err
 		return nil, fmt.Errorf("create http request failed,%v", err)
 	}
 
@@ -421,32 +410,22 @@ func (client *client) exec(out interface{}, cancel *context.CancelFunc) (int, er
 	cli := &http.Client{}
 	resp, err := cli.Do(request)
 	if err != nil {
-		client.logFields["error"] = err
 		return 0, err
 	}
 
-	client.logFields["status"] = resp.StatusCode
-	client.logFields["status_code"] = resp.Status
-
 	if resp.StatusCode < http.StatusOK ||
 		resp.StatusCode >= http.StatusMultipleChoices {
-		client.logFields["error"] = "response status error"
 		return resp.StatusCode, fmt.Errorf("reponse with bad status,%d", resp.StatusCode)
 	}
 
 	rsp, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		client.logFields["error"] = err
 		return resp.StatusCode, fmt.Errorf("Read response body failed")
 	}
 	defer resp.Body.Close()
 
-	client.logFields["response_payload_len"] = len(rsp)
-
 	err = json.Unmarshal(rsp, out)
 	if err != nil {
-		client.logFields["error"] = err
-		client.logFields["content"] = string(cutBytes(rsp, 4096))
 		return 0, fmt.Errorf("marshal result body failed")
 	}
 
@@ -469,7 +448,6 @@ func (client *client) getResp(cancel *context.CancelFunc) (*http.Response, error
 	cli := &http.Client{}
 	resp, err := cli.Do(request)
 	if err != nil {
-		client.logFields["error"] = err
 		return nil, err
 	}
 
@@ -478,10 +456,6 @@ func (client *client) getResp(cancel *context.CancelFunc) (*http.Response, error
 
 func (client *client) updateHystrix() {
 	hytrixCmd := client.hytrixCommand()
-	//if _, exist, _ := hystrix.GetCircuit(hytrixCmd); exist {
-	//	return
-	//}
-
 	hystrix.ConfigureCommand(hytrixCmd, client.circuitConfig)
 }
 

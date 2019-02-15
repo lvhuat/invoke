@@ -97,16 +97,11 @@ func (service *service) UseCircuit() bool {
 
 func newRest(service Service, circuitConfig hystrix.CommandConfig, method string, path string) Client {
 	client := &client{
-		createTime: time.Now(),
-		service:    service,
-		path:       path,
-		scheme:     "http",
-		method:     method,
-		logFields: map[string]interface{}{
-			"service": service.Name(),
-			"method":  method,
-			"path":    path,
-		},
+		createTime:    time.Now(),
+		service:       service,
+		path:          path,
+		scheme:        "http",
+		method:        method,
 		ctx:           context.Background(),
 		useTracing:    service.UseTracing(),
 		useCircuit:    service.UseCircuit(),
