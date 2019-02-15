@@ -227,12 +227,29 @@ func extractHttpResponse(invokeErr error, rsp *http.Response, out interface{}) c
 	return errCode
 }
 
+type ParseRspFunc func(invokeErr error, rsp *http.Response, out interface{}) code.Error
+
 // Result 获取结果
-// out json中data反序列化到out中
+// 将使用默认的解析器
 func (client *client) Result(out interface{}) code.Error {
 	rsp, err := client.response()
 	if err != nil {
-		return extractHttpResponse(err, rsp, out)
+		return defaultParseRsp(err, rsp, out)
 	}
+
+	return nil
+}
+
+// ResultByParse 获取结果
+func (client *client) ResultByParse(parse ParseRspFunc, out interface{}) code.Error {
+	if parse == nil {
+		panic("parse cannot be nil")
+	}
+
+	rsp, err := client.response()
+	if err != nil {
+		return parse(err, rsp, out)
+	}
+
 	return nil
 }

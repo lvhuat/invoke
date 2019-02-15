@@ -32,6 +32,9 @@ type (
 		DefaultTimeout               time.Duration // 通用请求超时
 		DefaultMaxConcurrentRequests int           // 通用请求并发度
 		DefaultErrorPercentThreshold int           // 通用错误容限（%）
+
+		// 结果解析
+		ParseRsp ParseRspFunc
 	}
 
 	// Engine 引擎

@@ -9,11 +9,15 @@ import (
 )
 
 var eng Engine = newEngine()
+var defaultParseRsp = extractHttpResponse
 
 // Init 初始化
 func Init(option *Option) error {
 	doLogger = option.DoLogger
 	doLoggerParam = option.DoLoggerParam
+	if option.ParseRsp != nil {
+		defaultParseRsp = extractHttpResponse
+	}
 
 	if option.UseCircuit {
 		switch {
