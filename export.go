@@ -80,9 +80,10 @@ type (
 		Fallback(func(error) error) Client                                // 失败触发器
 
 		// 获取结果
-		Exec(interface{}) (int, error)     // 执行请求
-		Response() (*http.Response, error) // 执行请求，返回标准的http.Response
-		Result(interface{}) code.Error     // 执行请求，并且读取其中的数据，获得返回对象
+		Exec(interface{}) (int, error)                                // 执行请求
+		Response() (*http.Response, error)                            // 执行请求，返回标准的http.Response
+		Result(interface{}) code.Error                                // 执行请求，并且读取其中的数据，获得返回对象
+		ResultByParse(parse ParseRspFunc, out interface{}) code.Error // 执行请求，并且使用自定义解析器，获得返回对象
 
 		// 其他
 		Context(context.Context) Client // 上下文（预留）
